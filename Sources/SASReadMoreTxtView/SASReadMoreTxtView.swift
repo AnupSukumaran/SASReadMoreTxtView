@@ -25,6 +25,7 @@ public class SASReadMoreTxtView: UITextView {
     private var cachedIntrinsicContentHeight: CGFloat?
     private var txtColor: UIColor?
     private var txtBold: UIFont?
+    private var txtBoldVal: CGFloat?
     
     @IBInspectable
     public var shouldTrim: Bool = false {
@@ -52,33 +53,68 @@ public class SASReadMoreTxtView: UITextView {
     }
     
     @IBInspectable
-    public var textBold: UIFont = UIFont.boldSystemFont(ofSize: 16) {
-        didSet {
-            txtBold = textBold
+    public var textBold: CGFloat  {
+        
+        get {
+            return txtBoldVal!
         }
+        
+        set {
+          //  if let b = newValue {
+                txtBoldVal = newValue
+               txtBold = UIFont.boldSystemFont(ofSize: newValue)
+           // } else {
+            //    txtBold = nil
+           // }
+        }
+        
+        
     }
     
     @IBInspectable
-    public var textFontColor: UIColor = .blue {
-        didSet {
-            txtColor = textFontColor
+        public var textFontColor: UIColor? {
+            get {
+                return  txtColor
+            }
+        
+            set {
+                if let text = newValue {
+                    txtColor = text
+                    let readMoreTextAttributes: [NSAttributedString.Key: Any] = [
+                       NSAttributedString.Key.foregroundColor: txtColor ?? .blue,
+                       NSAttributedString.Key.font: txtBold ?? UIFont.boldSystemFont(ofSize: 16)
+                    ]
+
+                    let attributedDefaultReadMoreText = NSAttributedString(string: readMoreText ?? "", attributes: readMoreTextAttributes)
+                    self.attributedReadMoreText = attributedDefaultReadMoreText
+                } else {
+                    txtColor = nil
+                }
+                
+            }
+    
         }
-    }
     
     /**The text to trim the original text. Setting this property resets `attributedReadMoreText`.*/
     @IBInspectable
     public var readMoreText: String? {
         get {
+            print("attributedReadMoreText?.string = \(attributedReadMoreText?.string)")
+            
             return attributedReadMoreText?.string
         }
         set {
             if let text = newValue {
+                print("text = \(text)")
+                
                 attributedReadMoreText = attributedStringWithDefaultAttributes(from: text)
             } else {
                 attributedReadMoreText = nil
             }
         }
     }
+    
+    
 
     private var _originalTextLength: Int {
        get {
@@ -97,6 +133,7 @@ public class SASReadMoreTxtView: UITextView {
         //readLessTextPadding = .zero
         
         super.init(frame: frame, textContainer: textContainer)
+        
         setupDefaults()
     }
     
@@ -115,6 +152,7 @@ public class SASReadMoreTxtView: UITextView {
         
         _originalMaximumNumberOfLines = maximumNumberOfLines
         super.init(coder: coder)
+        
         setupDefaults()
     }
     
@@ -176,6 +214,7 @@ public class SASReadMoreTxtView: UITextView {
     
     
     func setupDefaults() {
+        
         let defaultReadMoreText = NSLocalizedString("ReadMoreTextView.readMore", value: "more", comment: "")
         let attributedReadMoreText = NSMutableAttributedString(string: "... ")
 
@@ -186,26 +225,22 @@ public class SASReadMoreTxtView: UITextView {
           isEditable = false
         #endif
        
-        
-//        let readMoreTextAttributes: [NSAttributedString.Key: Any] = [
-//            NSAttributedString.Key.foregroundColor: txtColor ?? .blue,
-//            NSAttributedString.Key.font: txtBold ?? UIFont.boldSystemFont(ofSize: 16)
-//        ]
-//        
-//        let attributedDefaultReadMoreText = NSAttributedString(string: defaultReadMoreText, attributes: readMoreTextAttributes)
+
         
         let attributedDefaultReadMoreText = NSAttributedString(string: defaultReadMoreText, attributes: [
             NSAttributedString.Key.foregroundColor: UIColor.lightGray,
             NSAttributedString.Key.font: font ?? UIFont.systemFont(ofSize: 14)
         ])
         attributedReadMoreText.append(attributedDefaultReadMoreText)
+        
         self.attributedReadMoreText = attributedReadMoreText
     }
         
     private func attributedStringWithDefaultAttributes(from text: String) -> NSAttributedString {
+        
         return NSAttributedString(string: text, attributes: [
-            NSAttributedString.Key.font: font ?? UIFont.systemFont(ofSize: 14),
-            NSAttributedString.Key.foregroundColor: textColor ?? UIColor.black
+            NSAttributedString.Key.font: txtBold ?? UIFont.boldSystemFont(ofSize: 14),
+            NSAttributedString.Key.foregroundColor: txtColor ?? .green
         ])
     }
     
@@ -216,7 +251,9 @@ public class SASReadMoreTxtView: UITextView {
     private func showLessText() {
         if let readMoreText = readMoreText, text.hasSuffix(readMoreText) {
             
-            return }
+            return
+            
+        }
         
         shouldTrim = true
         print("maximumNumberOfLines = \(maximumNumberOfLines)")
